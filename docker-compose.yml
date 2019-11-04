@@ -1,0 +1,64 @@
+version: '3.3'
+
+services:
+   db_ref:
+    image: postgres:12
+    volumes:
+       - db_data_ref:/var/lib/postgresql/data
+    restart: always
+    environment:
+    - POSTGRES_USER=ontomantics
+    - POSTGRES_PASSWORD=onto
+    networks:
+     local:
+     
+   db_app:
+    image: postgres:12
+    volumes:
+       - db_data_app:/var/lib/postgresql/data
+    restart: always
+    environment:
+    - POSTGRES_USER=ontomantics
+    - POSTGRES_PASSWORD=onto
+    networks:
+     local:
+
+   Ontomantics:
+     depends_on:
+      - db_app
+      - db_ref
+     hostname: alacaule
+     image: onto4:latest
+     volumes:
+       - ontomantics:/var/ontomantics/files
+       - ontomantics:/var/ontomantics/reports
+       - ontomantics:/var/ontomantics/uploads
+       - ontomantics:/opt/ontomantics/wildfly/standalone/configuration
+       - ontomantics:/opt/ontomantics/wildfly/standalone/OntomanticsLibrary
+     restart: always
+     networks:
+      - proxy
+      - local
+     environment:
+     - REF_USER=ontomantics
+     - REF_PASSWORD=onto 
+     labels:
+     - "traefik.enable=true"
+     - "traefik.docker.network=proxy"
+     - "traefik.port=8080"
+     - "traefik.entryPoint=https"
+     - "traefik.backend=ontomantics"
+     - "traefik.frontend.rule=Host:aremplacer.ontoroute.fr"
+     expose:
+     - "8080"
+
+networks:
+    proxy:
+     external:
+      name: proxy
+    local:
+
+volumes:
+  db_data_ref:
+  db_data_app:
+  ontomantics:
